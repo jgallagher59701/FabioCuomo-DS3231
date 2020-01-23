@@ -26,6 +26,12 @@
  #define _I2C_READ  receive
 #endif
 
+/**
+ * @brief Read information from a device's register
+ * @param addr The device address  on the I2C bus
+ * @param reg The register
+ * @return The byte value (unsigned) of the register
+ */
 static uint8_t read_i2c_register(uint8_t addr, uint8_t reg) {
   Wire.beginTransmission(addr);
   Wire._I2C_WRITE((byte)reg);
@@ -35,6 +41,13 @@ static uint8_t read_i2c_register(uint8_t addr, uint8_t reg) {
   return Wire._I2C_READ();
 }
 
+/**
+ * @brief Write a byte value to a device's register
+ * @param addr The device address on the I2C bus
+ * @param reg The register
+ * @param val The value to write
+ * @see read_i2c_register
+ */
 static void write_i2c_register(uint8_t addr, uint8_t reg, uint8_t val) {
   Wire.beginTransmission(addr);
   Wire._I2C_WRITE((byte)reg);
@@ -520,6 +533,61 @@ float RTC_DS3231::getTemp() {
   else {
     return ((float)temp_msb + ((float)temp_lsb * 0.25));
   }
+}
+
+/**
+ * @brief Test the status of the INT/CN bit
+ *
+ * If the INT/CN is zero, pin 3 is set to otput a square wave. If it is
+ * one (the default value), it is not and is configured as an interrupt
+ * output pin.
+ *
+ * @return True if pin 3 is set to output a 32kHz square wave, false if not
+ */
+bool RTC_DS3231::getEN32kHz(void) {
+    //void write(byte addr, byte value);
+    //byte read(byte addr);
+
+    byte _byteValue = read(DS3231_STATUSREG);
+
+    if (_byteValue & DS3231_INTCN) {
+        return (false);
+    }
+    else {
+        // The bit is zero, so pin 3 outputs a 32kHz square wave
+        return (true);
+    }
+}
+
+/**
+ * @brief Enable 32kHz Output (EN32kHz) on pin 3.
+ *
+ * @param Enable True of the square wave should be output on pin 3,
+ * false if not.
+ * @return The actual value of the status register.
+ *
+ * @note This multifunction pin is determined by the state of the INTCN bit in the Control
+ * Register (0Eh). When INTCN is set to logic 0, this pin outputs a square wave and
+ * its frequency is determined by RS2 and RS1 bits. When INTCN is set to logic 1,
+ * then a match between the timekeeping registers and either of the alarm registers
+ * activates the INT/SQW pin (if the alarm is enabled). Because the INTCN bit is set
+ * to logic 1 when power is first applied, the pin defaults to an interrupt output
+ * with alarms disabled.
+ */
+
+byte RTC_DS3231::setEN32kHz(bool Enable) {
+    byte _byteValue = read(DS3231_STATUSREG);
+
+    if (Enable == true){
+        // Clear the bit to enable 32kHz output on pin 3
+        _byteValue &= ~DS3231_INTCN;
+    } else {
+        // Set the bit to disable 32kHz output on pin 3
+        _byteValue |= DS3231_INTCN;
+    }
+
+    write(DS3231_STATUSREG, _byteValue);
+    return _byteValue;
 }
 
 /*----------------------------------------------------------------------*
