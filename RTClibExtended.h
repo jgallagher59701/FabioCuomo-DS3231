@@ -34,6 +34,9 @@ class TimeSpan;
 // or square wave output mode. b 0000 0100. jhrg 1/22/20
 #define DS3231_INTCN    0x04
 
+// EN32kHz control bit. jhrg 1/23/20
+#define DS3231_EN32kHz  0x08
+
 //Control register bits
 #define A1IE 0
 #define A2IE 1

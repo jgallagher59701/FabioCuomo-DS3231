@@ -490,16 +490,28 @@ Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
   Wire.requestFrom((uint8_t)DS3231_ADDRESS, (uint8_t)1);
   mode = Wire._I2C_READ();
 
-  mode &= 0x93;
+  mode &= 0x93; // b 1001 0011
   return static_cast<Ds3231SqwPinMode>(mode);
 }
 
+/**
+ * @brief Control the INT/SQW pin mode
+ *
+ * If the mode is DS3231_OFF, then pin 3 (INT/SQW) is set to interrupt
+ * output mode. If it is one of the other values DS3231_SquareWave1Hz, ...,
+ * DS3231_SquareWave8kHz) then the pin outputs a square wave.
+ *
+ * @note if the interrupt output is to work when the DS3231 is in
+ * battery backup mode, the BBSQW bit must also be set.
+ *
+ * @param mode One of Ds3231SqwPinMode
+ */
 void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
   uint8_t ctrl;
   ctrl = read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL);
 
   ctrl &= ~0x04; // turn off INTCON
-  ctrl &= ~0x18; // set freq bits to 0
+  ctrl &= ~0x18; // set freq bits to 0 (b 0001 1000)
 
   if (mode == DS3231_OFF) {
     ctrl |= 0x04; // turn on INTCN
@@ -536,13 +548,13 @@ float RTC_DS3231::getTemp() {
 }
 
 /**
- * @brief Test the status of the INT/CN bit
+ * @brief Test the status of the EN32kHz bit of the control/status register
  *
- * If the INT/CN is zero, pin 3 is set to otput a square wave. If it is
- * one (the default value), it is not and is configured as an interrupt
- * output pin.
+ *  When set to logic 1, the 2kHz pin is enabled and outputs a 32.768kHz
+ *  squarewave signal. When set to logic 0, the 32kHz pin goes to a
+ *  high-impedance state.
  *
- * @return True if pin 3 is set to output a 32kHz square wave, false if not
+ * @return True if pin 1 is set to output a 32kHz square wave, false if not
  */
 bool RTC_DS3231::getEN32kHz(void) {
     //void write(byte addr, byte value);
@@ -550,40 +562,34 @@ bool RTC_DS3231::getEN32kHz(void) {
 
     byte _byteValue = read(DS3231_STATUSREG);
 
-    if (_byteValue & DS3231_INTCN) {
-        return (false);
+    if (_byteValue & DS3231_EN32kHz) {
+        return (true);
     }
     else {
-        // The bit is zero, so pin 3 outputs a 32kHz square wave
-        return (true);
+        return (false);
     }
 }
 
 /**
- * @brief Enable 32kHz Output (EN32kHz) on pin 3.
+ * @brief Enable 32kHz Output (EN32kHz) on pin 1.
  *
- * @param Enable True of the square wave should be output on pin 3,
+ * @param Enable True of the square wave should be output on pin 1,
  * false if not.
- * @return The actual value of the status register.
+ * @return The actual value of the status register; AND with DS3231_EN32kHz
+ * to get the state of the bit.
  *
- * @note This multifunction pin is determined by the state of the INTCN bit in the Control
- * Register (0Eh). When INTCN is set to logic 0, this pin outputs a square wave and
- * its frequency is determined by RS2 and RS1 bits. When INTCN is set to logic 1,
- * then a match between the timekeeping registers and either of the alarm registers
- * activates the INT/SQW pin (if the alarm is enabled). Because the INTCN bit is set
- * to logic 1 when power is first applied, the pin defaults to an interrupt output
- * with alarms disabled.
+ * @note Setting this to high impedance reduces battery backed power use.
  */
 
 byte RTC_DS3231::setEN32kHz(bool Enable) {
     byte _byteValue = read(DS3231_STATUSREG);
 
     if (Enable == true){
-        // Clear the bit to enable 32kHz output on pin 3
-        _byteValue &= ~DS3231_INTCN;
+        // Set the bit to enable 32kHz output on pin 1
+        _byteValue |= DS3231_EN32kHz;
     } else {
-        // Set the bit to disable 32kHz output on pin 3
-        _byteValue |= DS3231_INTCN;
+        // Clear the bit to enable 32kHz output on pin 1
+        _byteValue &= ~DS3231_EN32kHz;
     }
 
     write(DS3231_STATUSREG, _byteValue);
