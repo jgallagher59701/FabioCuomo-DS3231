@@ -512,14 +512,109 @@ float RTC_DS3231::getTemp() {
   temp_lsb = (Wire._I2C_READ() >> 6) & 0x03;
   Wire.endTransmission();
 
-  if(temp_msb & 0b10000000) {     //check if negative number
-    temp_msb  ^= 0b11111111;
-    temp_msb  += 0x1;
-    return (-1.0 * ((float)temp_msb) + ((float)temp_lsb * 0.25));
-  }
-  else {
-    return ((float)temp_msb + ((float)temp_lsb * 0.25));
-  }
+    if (temp_msb & 0b10000000) {     //check if negative number
+        temp_msb ^= 0b11111111;
+        temp_msb += 0x1;
+        return (-1.0 * ((float) temp_msb) + ((float) temp_lsb * 0.25));
+    } else {
+        return ((float) temp_msb + ((float) temp_lsb * 0.25));
+    }
+}
+
+/**
+ * @brief Test the status of the EN32kHz bit of the control/status register
+ *
+ *  When set to logic 1, pin 1 is enabled and outputs a 32.768kHz
+ *  squarewave signal. When set to logic 0, pin 1 goes to a
+ *  high-impedance state.
+ *
+ * @return True if pin 1 is set to output a 32kHz square wave, false if not
+ */
+bool RTC_DS3231::getEN32kHz(void) {
+    //void write(byte addr, byte value);
+    //byte read(byte addr);
+
+    byte _byteValue = read(DS3231_STATUSREG);
+
+    if (_byteValue & DS3231_EN32kHz) {
+        return (true);
+    } else {
+        return (false);
+    }
+}
+
+/**
+ * @brief Enable 32kHz Output (EN32kHz) on pin 1.
+ *
+ * @param Enable True if the square wave should be output on pin 1,
+ * false if not.
+ * @return The actual value of the status register; AND with DS3231_EN32kHz
+ * to get the state of the bit.
+ *
+ * @note If this control bit is cleared, pin 1 will not output the 32kHz square
+ * wave and will go to high impedance instead.Setting this to high impedance
+ * reduces battery-backed power use.
+ */
+byte RTC_DS3231::setEN32kHz(bool Enable) {
+    byte _byteValue = read(DS3231_STATUSREG);
+
+    if (Enable == true) {
+        // Set the bit to enable 32kHz output on pin 1
+        _byteValue |= DS3231_EN32kHz;
+    } else {
+        // Clear the bit to enable 32kHz output on pin 1
+        _byteValue &= ~DS3231_EN32kHz;
+    }
+
+    write(DS3231_STATUSREG, _byteValue);
+    return _byteValue;
+}
+
+/**
+ * @brief Test the status of the BBSQW bit of the control register
+ *
+ *  When set to logic 1, pin 3 will output a square wave or interrupt when
+ *  the DS3231 is powered by the battery backup; when set to logic 0, it
+ *  will not.
+ *
+ * @return True if BBSQW is set, false if not
+ */
+bool RTC_DS3231::getBBSQW(void) {
+    //void write(byte addr, byte value);
+    //byte read(byte addr);
+
+    byte _byteValue = read(DS3231_CONTROL);
+
+    if (_byteValue & DS3231_BBSQW) {
+        return (true);
+    } else {
+        return (false);
+    }
+}
+
+/**
+ * @brief Set BBSQW
+ *
+ * @param Enable True sets the BBSQW bit of the CONTROL register, False
+ * clears it.
+ *
+ * @note Setting BBSQW is needed to generate an interrupt (pin 3) when on battery
+ * backup power. Setting it when pin 3 is used for a square wave will consume
+ * more power when battery backed.
+ */
+byte RTC_DS3231::setBBSQW(bool Enable) {
+    byte _byteValue = read(DS3231_CONTROL);
+
+    if (Enable == true) {
+        // Set the bit to enable 32kHz output on pin 1
+        _byteValue |= DS3231_BBSQW;
+    } else {
+        // Clear the bit to enable 32kHz output on pin 1
+        _byteValue &= ~DS3231_BBSQW;
+    }
+
+    write(DS3231_STATUSREG, _byteValue);
+    return _byteValue;
 }
 
 /*----------------------------------------------------------------------*
