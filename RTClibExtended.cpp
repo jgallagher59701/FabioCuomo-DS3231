@@ -651,14 +651,14 @@ bool RTC_DS3231::getEN32kHz(void) {
  * reduces battery-backed power use.
  */
 byte RTC_DS3231::setEN32kHz(bool Enable) {
-    byte _byteValue = read(DS3231_CONTROL);
+    byte _byteValue = read(DS3231_STATUSREG);
 
     if (Enable == true) {
         // Set the bit to enable 32kHz output on pin 1
-        _byteValue |= DS3231_BBSQW;
+        _byteValue |= DS3231_EN32kHz;
     } else {
         // Clear the bit to enable 32kHz output on pin 1
-        _byteValue &= ~DS3231_BBSQW;
+        _byteValue &= ~DS3231_EN32kHz;
     }
 
     write(DS3231_CONTROL, _byteValue);
@@ -698,14 +698,14 @@ bool RTC_DS3231::getBBSQW(void) {
  * more power when battery backed.
  */
 byte RTC_DS3231::setBBSQW(bool Enable) {
-    byte _byteValue = read(DS3231_STATUSREG);
+    byte _byteValue = read(DS3231_CONTROL);
 
     if (Enable == true) {
         // Set the bit to enable 32kHz output on pin 1
-        _byteValue |= DS3231_EN32kHz;
+        _byteValue |= DS3231_BBSQW;
     } else {
         // Clear the bit to enable 32kHz output on pin 1
-        _byteValue &= ~DS3231_EN32kHz;
+        _byteValue &= ~DS3231_BBSQW;
     }
 
     write(DS3231_STATUSREG, _byteValue);
