@@ -25,6 +25,18 @@ class TimeSpan;
 
 #define SECONDS_FROM_1970_TO_2000    946684800
 
+// Battery Backup Square Wave interrupt status bit. Controls
+// if the clock will issue and interrupt on alarm when running
+// on the battery backup. (Control register) b 0100 0000  jhrg 1/22/20
+#define DS3231_BBSQW    0x40
+
+// INTCN controls if the INT/SQW pin (pin 3) is in interrupt
+// or square wave output mode. (Control register) b 0000 0100. jhrg 1/22/20
+#define DS3231_INTCN    0x04
+
+// EN32kHz control bit. (Control/status register) jhrg 1/23/20
+#define DS3231_EN32kHz  0x08
+
 //Control register bits
 #define A1IE 0
 #define A2IE 1
@@ -144,6 +156,13 @@ public:
     static Ds3231SqwPinMode readSqwPinMode();
     static void writeSqwPinMode(Ds3231SqwPinMode mode);
     float getTemp();
+
+    // Added jhrg 1/22/20
+    bool getEN32kHz(void);
+    byte setEN32kHz(bool Enable);
+    bool getBBSQW(void);
+    byte setBBSQW(bool Enable);
+
     void forceConversion(void);
     void setAlarm(Ds3231_ALARM_TYPES_t alarmType, byte seconds, byte minutes, byte hours, byte daydate);
     void setAlarm(Ds3231_ALARM_TYPES_t alarmType, byte minutes, byte hours, byte daydate);
