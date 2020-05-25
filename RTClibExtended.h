@@ -26,8 +26,9 @@ class TimeSpan;
 #define SECONDS_FROM_1970_TO_2000    946684800
 
 // Battery Backup Square Wave interrupt status bit. Controls
-// if the clock will issue and interrupt on alarm when running
-// on the battery backup. (Control register) b 0100 0000  jhrg 1/22/20
+// if the clock will issue an interrupt on alarm (or output a
+// square wave) when running on the battery backup.
+// (Control register) b 0100 0000  jhrg 1/22/20
 #define DS3231_BBSQW    0x40
 
 // INTCN controls if the INT/SQW pin (pin 3) is in interrupt
