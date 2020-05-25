@@ -665,7 +665,7 @@ byte RTC_DS3231::setEN32kHz(bool Enable) {
         _byteValue &= ~DS3231_EN32kHz;
     }
 
-    write(DS3231_CONTROL, _byteValue);
+    write(DS3231_STATUSREG, _byteValue);
     return _byteValue;
 }
 
@@ -715,7 +715,7 @@ byte RTC_DS3231::setBBSQW(bool Enable) {
         _byteValue &= ~DS3231_BBSQW;
     }
 
-    write(DS3231_STATUSREG, _byteValue);
+    write(DS3231_CONTROL, _byteValue);
     return _byteValue;
 }
 
